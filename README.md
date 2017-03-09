@@ -1,5 +1,5 @@
 # ANDA SAT Solver
-If you want to understand how this code works, open the init.lua file, scroll to the bottom
+If you want to understand how this code works, open the anda.lua file, scroll to the bottom
 and find the function titled ```anda(disjunctions)``` (P.S. to the person whom knows why I named it Anda, love ya)
 
 the way lua is interpreted is just like C++ this means that all the dependency functions have to be written
