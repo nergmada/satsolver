@@ -41,7 +41,7 @@ local function tostring(value)
     end
 end
 
-local pretty = {}
+local prtty = {}
 
 local function save_global_env()
     local env = {}
@@ -69,7 +69,7 @@ end
 -- @return a table in case of success.
 -- If loading the string failed, return `nil` and error message.
 -- If executing loaded string failed, return `nil` and the error it raised.
-function pretty.read(s)
+function prtty.read(s)
     assert_arg(1,s,'string')
     if s:find '^%s*%-%-' then -- may start with a comment..
         s = s:gsub('%-%-.-\n','')
@@ -102,7 +102,7 @@ end
 -- and disable string methods.
 -- @return the environment in case of success or `nil` and syntax or runtime error
 -- if something went wrong.
-function pretty.load (s, env, paranoid)
+function prtty.load (s, env, paranoid)
     env = env or {}
     if paranoid then
         local tok = lexer.lua(s)
@@ -140,7 +140,7 @@ end
 
 local function quote (s)
     if type(s) == 'table' then
-        return pretty.write(s,'')
+        return prtty.write(s,'')
     else
         --AAS
         return quote_string(s)-- ('%q'):format(tostring(s))
@@ -169,7 +169,7 @@ end
 -- Defaults to `false`.
 -- @return a string
 -- @return an optional error message
-function pretty.write (tbl,space,not_clever)
+function prtty.write (tbl,space,not_clever)
     if type(tbl) ~= 'table' then
         local res = tostring(tbl)
         if type(tbl) == 'string' then return quote(tbl) end
@@ -276,12 +276,12 @@ end
 -- @tab t The table to write to a file or stdout.
 -- @string[opt] filename File name to write too. Defaults to writing
 -- to stdout.
-function pretty.dump (t, filename)
+function pretty(t, filename)
     if not filename then
-        print(pretty.write(t))
+        print(prtty.write(t))
         return true
     else
-        return utils.writefile(filename, pretty.write(t))
+        return utils.writefile(filename, prtty.write(t))
     end
 end
 
@@ -299,7 +299,7 @@ end
 -- `'N'` (postfixes are `'K'`, `'M'` and `'B'`),
 -- or `'T'` (use commas as thousands separator), `'N'` by default.
 -- @int[opt] prec number of digits to use for `'M'` and `'N'`, `1` by default.
-function pretty.number (num,kind,prec)
+function prtty.number (num,kind,prec)
     local fmt = '%.'..(prec or 1)..'f%s'
     if kind == 'T' then
         return comma(num)

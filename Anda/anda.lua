@@ -8,10 +8,16 @@ package.path = executePath .. '\\?.lua;' .. executePath .. '\\?\\init.lua;' .. p
 --require the stringifySAT function (a function for stringifying SAT formulas)
 local stringifySAT = require('stringifySAT')
 --require the additional table functions (we have to shallow copy because lua passes by ref)
-require('table')
+local shallow_copy = require('copy')
 --Just a useful script for pretty printing
-local pretty = require('pretty').dump
+local pretty = require('pretty')
 
+local debug = false
+function debugPrint(t) 
+    if debug then
+        print(t)
+    end
+end
 
 --A SAT formula in CNF is a set of conjuncted disjunctive clauses
 --in this code to create for example A /\ (¬B V C) /\ (D V F)
@@ -24,8 +30,10 @@ local exampleDisjunctions = {
 --As many terms as desired can be added to any clause But no guarantees on performance are made
 
 local testDisjunctions = {
-    {'A'}, 
-    {'-A'}
+    {'A', '-B', 'C'}, 
+    {'-A', 'B'},
+    {'G', 'A', '-D'},
+    {'-D', 'D', 'R'}
 }
 
 
@@ -103,11 +111,20 @@ function pullTerms(disjunctions)
 end
 
 function satsolver(disjunctions, partialAssignment)
+    debugPrint('recursive call arguments')
+    debugPrint('disjunctions:')
+    debugPrint(stringifySAT(disjunctions))
+    debugPrint('disjunction count: ' .. #disjunctions)
+    debugPrint('partial Assignments: ')
+    if debug == true then
+        pretty(partialAssignment)
+    end
     --if no disjunctions left then return true and print the partial assignment
     if #disjunctions == 0 then
         --print the partial assignments
         pretty(partialAssignment)
         --return true
+        debugPrint('valid assignment found')
         return true
     end
     local noUnitPropagation, noLiteralElimination = true, true
@@ -125,6 +142,8 @@ function satsolver(disjunctions, partialAssignment)
                     return false
                 else
                     --if the partial assignment doesn't exist or it's in agreement assign false
+                    debugPrint('pure unit located: ' .. disjunction[1])
+                    debugPrint('assign false to ' .. negativeLiteral)
                     partialAssignment[negativeLiteral] = false
                 end
             --else if no negative literal found
@@ -135,6 +154,8 @@ function satsolver(disjunctions, partialAssignment)
                     return false
                 --otherwise if not assigned or not contradictory, assign it
                 else
+                    debugPrint('pure unit located: ' .. disjunction[1])
+                    debugPrint('assign true to ' .. disjunction[1])
                     partialAssignment[disjunction[1]] = true
                 end
             end
@@ -204,6 +225,8 @@ function satsolver(disjunctions, partialAssignment)
                 return false
             else
                 --otherwise partially assign positive (as only positive literals were found)
+                debugPrint('Pure literal located: ' .. term)
+                debugPrint('assign true to ' .. term)
                 partialAssignment[term] = true
             end
             --there has been a literal elimination so this false
@@ -216,6 +239,8 @@ function satsolver(disjunctions, partialAssignment)
                 return false
             else
                 --otherwise perform the partial assignment
+                debugPrint('Pure literal located: -' .. term)
+                debugPrint('assign false to ' .. term)
                 partialAssignment[term] = false
             end
             --there has been a literal elimination so this is false
@@ -244,20 +269,26 @@ function satsolver(disjunctions, partialAssignment)
             return true
         end
         --let's assume our random variable to be true first
+        debugPrint('Random variable chosen: ' .. chosenUnassignedVariable)
+        debugPrint('value assigned is true')
         partialAssignment[chosenUnassignedVariable] = true
         --run sat solver on the this new partial assignment including our guess
         --(NB we do table.shallow_copy because lua likes to be efficient and not duplicate tables)
-        if satsolver(disjunctions, table.shallow_copy(partialAssignment)) then
+        pretty(partialAssignment)
+        if satsolver(disjunctions, shallow_copy(partialAssignment)) then
             --if satsolver returns true then the recursive call seems to think it's solved it
             --if this is the case then return true
+            debugPrint('valid assignment found')
             return true 
         end
+        debugPrint('no lucky with true... assigning false')
         --if the previous assignment was unsuccessful (i.e. it didn't return)
         --reassign the term to be false this time
         partialAssignment[chosenUnassignedVariable] = false
         --if sat solver returns true for this assignment
-        if satsolver(disjunctions, table.shallow_copy(partialAssignment)) then
+        if satsolver(disjunctions, shallow_copy(partialAssignment)) then
             --then return true
+            debugPrint('valid assignment found')
             return true
         end
         --A contradiction exists if we cannot solve for either term A or -A (where A is our randomly chosenUnassignedVariable)
@@ -273,7 +304,7 @@ function satsolver(disjunctions, partialAssignment)
             return false
         end
         --otherwise, shallow copy the partial assignment table and run satsolver
-        satsolver(recDisjunctions, table.shallow_copy(partialAssignment))
+        return satsolver(recDisjunctions, shallow_copy(partialAssignment))
     end
 end
 
@@ -281,7 +312,8 @@ function anda(disjunctions)
     print('Annoying NerDy Acronym - Adam Green - 2017')
     print("The Disjunction you've provided:")
     print(stringifySAT(testDisjunctions))
-    if not satsolver(disjunctions, pullTerms(disjunctions)) then
+    local result = satsolver(disjunctions, pullTerms(disjunctions))
+    if not result then
         print('unable to solve, probably contradictory')
     end
 end
