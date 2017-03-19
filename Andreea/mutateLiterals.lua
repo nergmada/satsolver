@@ -6,7 +6,7 @@ function literalsMutation(literals, units)
         --if it's a negative unit'
         if (unit < 0) then
             --check the literals table to ensure that it is unset or set to false
-            if newLiterals[-unit] == 0 or newLiterals[-unit] == false then
+            if type(newLiterals[-unit]) == "number" or newLiterals[-unit] == false then
                 --if so, set it to false
                 newLiterals[-unit] = false
             else 
@@ -15,7 +15,7 @@ function literalsMutation(literals, units)
             end
         else
             --otherwise we've got a positive unit, check that it's unset or true
-            if newLiterals[unit] == 0 or newLiterals[unit] == true then
+            if type(newLiterals[unit]) == "number" or newLiterals[unit] == true then
                 --set to true
                 newLiterals[unit] = true
             else

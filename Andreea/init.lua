@@ -14,12 +14,12 @@ end
 dump = require('pretty')
 stringify = require('stringifySat')
 table.copy = require('copy')
+table.search = require('search')
 
 
 local data = require('loadSat')
 
 local solver = require('solver')
-
 
 local result = solver(data[1], data[2])
 if true then

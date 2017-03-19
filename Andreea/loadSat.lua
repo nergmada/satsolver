@@ -13,6 +13,14 @@ local details = {}
 for i in string.gmatch(line, "%S+") do
    table.insert(details, i)
 end
+
+local terms = {}
+--EXPEDIENCIES: It might be computationally cheaper to shift terms into base 1 array and shift back
+--to base zero for the result
+for i = 0, tonumber(details[3]) do
+    terms[i] = 0
+end
+
 --Create a table for all the clauses
 local clauses = {}
 --Start reading lines
@@ -26,7 +34,13 @@ while (line ~= nil) do
     --add each term to it
     for term in string.gmatch(line, "%S+") do
         if (term ~= "0") then
-            table.insert(clause, tonumber(term))
+            local unit = tonumber(term)
+            table.insert(clause, unit)
+            if (unit < 0) then
+                terms[-unit] = terms[-unit] + 1
+            else
+                terms[unit] = terms[unit] + 1
+            end
         end
     end
     --add the new clause to the clauses table
@@ -42,11 +56,5 @@ if (#clauses ~= tonumber(details[4])) then
     error("clauses expected do not match clauses found")
 end
 
-local terms = {}
---EXPEDIENCIES: It might be computationally cheaper to shift terms into base 1 array and shift back
---to base zero for the result
-for i = 0, tonumber(details[3]) do
-    terms[i] = 0
-end
 
 return { clauses, terms }
