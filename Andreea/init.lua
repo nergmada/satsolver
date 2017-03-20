@@ -15,9 +15,12 @@ dump = require('pretty')
 stringify = require('stringifySat')
 table.copy = require('copy')
 table.search = require('search')
+table.removeValue = require('remove')
 
 
 local data = require('loadSat')
+
+-- dump(data[2])
 
 local solver = require('solver')
 

@@ -1,47 +1,27 @@
-local mutateLiterals = require('mutateLiterals')
-local reduceSats = require('reduceSats')
+local reduceAndMutate = require('reduceAndMutate')
 
 function pureLiteralEliminator(cnf, literals) 
     local pureLiterals = {}
-    for i = 1, #literals do
-        local foundNegative = false
-        local foundPositive = false
-        for _, dnf in ipairs(cnf) do
-            for _, term in ipairs(dnf) do
-                if term == i then
-                    foundPositive = true
-                elseif term == -i then
-                    foundNegative = true
-                end
-                if foundPositive and foundNegative then
-                    break
-                end
-            end
-            if foundPositive and foundNegative then
-                break
-            end
-        end
-        if not (foundPositive and foundNegative) then
-            if foundPositive then
-                table.insert(pureLiterals, i)
-            elseif foundNegative then
-                table.insert(pureLiterals, -i)
+    for literal, dnfs in ipairs(literals) do
+        if type(dnfs) == 'table' and #dnfs > 0 then
+            table.sort(dnfs)
+            if dnfs[1] > 0 then
+                table.insert(pureLiterals, literal)
+            elseif dnfs[#dnfs] < 0 then
+                table.insert(pureLiterals, -literal)
             end
         end
     end
     if #pureLiterals == 0 then
-        return cnf, literals, false, false
+        return false, false
     end
-
     table.sort(pureLiterals)
-    local newLiterals = mutateLiterals(literals, pureLiterals)
-    if newLiterals == nil then
-        return cnf, literals, true, true
+    local success = reduceAndMutate(cnf, pureLiterals, literals)
+    if success == false then
+        return true, true
     end
 
-    local newCnf = reduceSats(cnf, pureLiterals)
-
-    return newCnf, newLiterals, true, false
+    return true, false
 end
 
 return pureLiteralEliminator

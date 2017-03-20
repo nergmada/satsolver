@@ -17,8 +17,8 @@ end
 local terms = {}
 --EXPEDIENCIES: It might be computationally cheaper to shift terms into base 1 array and shift back
 --to base zero for the result
-for i = 0, tonumber(details[3]) do
-    terms[i] = 0
+for i = 1, tonumber(details[3]) do
+    terms[i] = {}
 end
 
 --Create a table for all the clauses
@@ -37,9 +37,9 @@ while (line ~= nil) do
             local unit = tonumber(term)
             table.insert(clause, unit)
             if (unit < 0) then
-                terms[-unit] = terms[-unit] + 1
+                table.insert(terms[-unit], -(#clauses + 1))
             else
-                terms[unit] = terms[unit] + 1
+                table.insert(terms[unit], (#clauses + 1))
             end
         end
     end
@@ -51,6 +51,14 @@ while (line ~= nil) do
     --read a new line
     line = satFile:read()
 end
+
+--Some terms do not appear at all
+for term, count in ipairs(terms) do
+    if count == 0 then
+        terms[term] = nil
+    end
+end
+
 -- throw an error if the clauses found don't match clauses specified'
 if (#clauses ~= tonumber(details[4])) then
     error("clauses expected do not match clauses found")

@@ -1,5 +1,4 @@
-local mutateLiterals = require('mutateLiterals')
-local reduceSats = require('reduceSats')
+local reduceAndMutate = require('reduceAndMutate')
 
 function unitPropagation(cnf, literals)
     local units = {}
@@ -11,22 +10,16 @@ function unitPropagation(cnf, literals)
     end
     
     if (#units == 0) then
-        return cnf, literals, false, false
+        return false, false
     end
-
     table.sort(units)
     --transform literals to match unit
-    local newLiterals = mutateLiterals(literals, units)
-
-    if newLiterals == nil then
-        return cnf, literals, true, true
+    local success = reduceAndMutate(cnf, units, literals)
+    if success == false then
+        return true, true
     end
 
-    --Creating a new set of CNF
-    local newCnf = reduceSats(cnf, units)
-
-    return newCnf, newLiterals, true, false
-
+    return true, false
 end
 
 return unitPropagation
