@@ -28,7 +28,7 @@ function assignLiteralValueAndRetrieveDnfIds(literals, unit)
     else
         if type(literals[unit]) == 'table' then
             local dnfIds = literals[unit]
-            literals[unit] = false
+            literals[unit] = true
             return dnfIds, false
         elseif literals[unit] == true then
             return {}, true

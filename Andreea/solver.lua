@@ -28,7 +28,7 @@ function solver(cnf, literals)
     end
     local loopcount = 1
     local dnfCount = #cnf
-    while (#cnf ~= 0) do
+    while (dnfCount ~= 0) do
         local unitSuccess, unitContradiction = unitPropagation(cnf, literals)
         if unitContradiction then
             verbosePrint("Contradiction found whilst unitising, backtracking")
@@ -81,7 +81,7 @@ function solver(cnf, literals)
 
         verbosePrint("Remaining Clauses: " .. dnfCount)
         verbosePrint("snapshot count: " .. current)
-        if current > 200 then
+        if current > 400 then
             table.remove(snapshots, 1)
             current = current - 1
         end
