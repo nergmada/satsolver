@@ -1,27 +1,23 @@
 local unitPropagation = require('unitPropagation')
 local pureLiteralEliminator = require('pureLiteralEliminator')
 local reduceAndMutate = require('reduceAndMutate')
+local snapshotManager = require('snapshotManager')
+local pickLiteral = require('pickLiteral')
 function solver(cnf, literals)
     verbosePrint("initial clauses: " .. #cnf)
     verbosePrint("Literals to find: " .. #literals)
-
-    --SNAPSHOT: The CNF, The Literals, literal changed, what value was assigned, whether not we've backtracked to it yet
-    local snapshots, current = { {cnf, literals, 0, false, false } }, 1
-    
     function handleContradiction()
         verbosePrint("NOTE: Handling contradiction, backtracking")
-        if current == 1 then
+        if snapshotManager.hasSnapshots() then
             return false
         else
-            if snapshots[current][5] == false then
-                cnf = snapshots[current][1]
-                literals = snapshots[current][2]
-                literals[snapshots[current][3]] = true
-                snapshots[current][4] = not snapshots[current][4]
-                snapshots[current][5] = true
+            local snapshot = snapshotManager.retrieveSnapshot()
+            if snapshot ~= nil and snapshot[5] == false then
+                snapshotManager.saveSnapshot(snapshot[1], snapshot[2], snapshot[3], not snapshot[4], not snapshot[5])
+                cnf, literals = snapshot[1], snapshot[2]
+                literals[snapshot[3]] = not snapshot[4]
                 return true
             else
-                current = current - 1
                 return handleContradiction()
             end
         end
@@ -48,22 +44,14 @@ function solver(cnf, literals)
         if not (unitSuccess or pureSuccess) then
             verbosePrint("NOTE: No success with pure or unit elimination")
             --If there are none to recalculate then outcome will be false       
-            local nextLiteral, noOfAppearances = 0, 0
-            for literal, value in pairs(literals) do
-                if type(value) == "table" and (math.abs(#value) > noOfAppearances) then
-                    nextLiteral, noOfAppearances = literal, math.abs(#value)
-                end
-            end
-            verbosePrint("Guessing next literal: " .. nextLiteral)
-            verbosePrint("No of Appearances " .. noOfAppearances)
+            local nextLiteral, assignment = pickLiteral(literals)
             if nextLiteral == 0 then
                 verbosePrint("No next literal found, all literals assigned")
                 if not handleContradiction() then
                     return false
                 end
             else
-                snapshots[current + 1] = { table.copy(cnf), table.copy(literals), nextLiteral, true, false }
-                current = current + 1
+                snapshotManager.saveSnapshot(cnf, literals, nextLiteral, assignment, false)
                 if not reduceAndMutate(cnf, { nextLiteral }, literals) then
                     verbosePrint("reduced a formula to unsatisfiability")
                     if not handleContradiction() then
@@ -80,11 +68,6 @@ function solver(cnf, literals)
         end
 
         verbosePrint("Remaining Clauses: " .. dnfCount)
-        verbosePrint("snapshot count: " .. current)
-        if current > 400 then
-            table.remove(snapshots, 1)
-            current = current - 1
-        end
     end
     return true
 end

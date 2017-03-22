@@ -1,5 +1,5 @@
 --Load SAT file
-local satFile = io.open("tests/sat_prob_3.cnf", "r")
+local satFile = io.open("tests/sat_prob_143.cnf", "r")
 --Read line from sat file
 local line = satFile:read()
 --Loop through lines until the start of the SAT formula is found (denoted by P)
@@ -64,5 +64,6 @@ if (#clauses ~= tonumber(details[4])) then
     error("clauses expected do not match clauses found")
 end
 
+satFile:close()
 
 return { clauses, terms }

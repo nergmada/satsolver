@@ -11,11 +11,11 @@ function verbosePrint(input)
     end
 end
 
-dump = require('pretty')
-stringify = require('stringifySat')
-table.copy = require('copy')
-table.search = require('search')
-table.removeValue = require('remove')
+dump = require('utils.pretty')
+stringify = require('utils.stringifySat')
+table.copy = require('utils.copy')
+table.search = require('utils.search')
+table.removeValue = require('utils.remove')
 
 
 local data = require('loadSat')
@@ -27,6 +27,15 @@ local solver = require('solver')
 local result = solver(data[1], data[2])
 if true then
     if result then
+        local result = ''
+        for literal, value in ipairs(data[2]) do
+            if value == true then
+                result = result .. literal .. ' -> T, '
+            elseif value == false then
+                result = result .. literal .. ' -> F, '
+            end
+        end
+        print(result)
         print("SATISIFIABLE")
     else
         print("UNSATISFIABLE")
